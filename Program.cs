@@ -11,7 +11,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins("http://localhost:3000",
-                                "http://localhost:")
+                                "http://localhost:7271")
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
         });
@@ -46,7 +46,57 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//USER API CALLS
+app.MapGet("/users", (AoSDbContext db) =>
+{
+    return db.Users.ToList();
+});
 
+app.MapGet("/users/{id}", (AoSDbContext db, int id) =>
+{
+    return db.Users.Single(user => user.UserId == id);
+});
+
+app.MapPost("/users", (AoSDbContext db, User user) =>
+{
+    try
+    {
+        db.Users.Add(user);
+        db.SaveChanges();
+        return Results.Created($"/users/{user.UserId}", user);
+    }
+    catch (DbUpdateException)
+    {
+        return Results.NotFound();
+    }
+});
+
+app.MapPut("/users/{id}", (AoSDbContext db, int id, User user) =>
+{
+    User userToUpdate = db.Users.SingleOrDefault(user => user.UserId == id);
+    if (userToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    userToUpdate.FirstName = user.FirstName;
+    userToUpdate.LastName = user.LastName;
+    userToUpdate.Email = user.Email;
+    userToUpdate.ImageUrl = user.ImageUrl;
+
+    db.Update(userToUpdate);
+    db.SaveChanges();
+    return Results.Ok(userToUpdate);
+});
+
+app.MapGet("/checkuser/{uid}", (AoSDbContext db, string uid) =>
+{
+    var userExist = db.Users.Where(user => user.UID == uid).FirstOrDefault();
+    if (userExist == null)
+    {
+        return Results.BadRequest("User is not a member");
+    }
+    return Results.Ok(userExist);
+});
 
 app.UseHttpsRedirection();
 
