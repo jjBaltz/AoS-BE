@@ -98,6 +98,18 @@ app.MapGet("/checkuser/{uid}", (AoSDbContext db, string uid) =>
     return Results.Ok(userExist);
 });
 
+//MEMORY API CALLS
+app.MapGet("/memories", (AoSDbContext db) =>
+{
+    return db.Memories.ToList();
+});
+
+app.MapGet("/memories/{id}", (AoSDbContext db, int id) =>
+{
+    return db.Memories.Single(memory => memory.MemoryId == id);
+});
+
+
 app.UseHttpsRedirection();
 
 app.Run();
