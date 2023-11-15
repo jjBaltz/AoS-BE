@@ -123,17 +123,55 @@ app.MapPost("/memories", (AoSDbContext db, Memory memory) =>
     }
 });
 
+//ACTIVITY API CALLS
+app.MapGet("/activities", (AoSDbContext db) =>
+{
+    return db.Activities.ToList();
+});
+
+app.MapGet("/activities/{id}", (AoSDbContext db, int id) =>
+{
+    return db.Activities.Single(activity => activity.ActivityId == id);
+});
+
+app.MapPost("/activities", (AoSDbContext db, Activity activity) =>
+{
+    try
+    {
+        db.Activities.Add(activity);
+        db.SaveChanges();
+        return Results.Created($"/activities/{activity.ActivityId}", activity);
+    }
+    catch (DbUpdateException)
+    {
+        return Results.NotFound();
+    }
+});
+
+app.MapPut("/activities/{id}", (AoSDbContext db, int id, Activity activity) =>
+{
+    Activity activityToUpdate = db.Activities.SingleOrDefault(activity => activity.ActivityId == id);
+    if (activityToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    activityToUpdate.Description = activity.Description;
+
+    db.Update(activityToUpdate);
+    db.SaveChanges();
+    return Results.Ok(activityToUpdate);
+});
+
 app.MapPost("/activities/{activityId}/memories/{memoryId}", (AoSDbContext db, int activityId, int memoryId) =>
 {
     var activity = db.Activities.Include(a => a.Memories)
-                         .FirstOrDefault(a => a.Id == activityId);
+                                .FirstOrDefault(m => m.ActivityId == activityId);
     if (activity == null)
     {
         return Results.NotFound("Activity Not Found");
     }
 
     var memoryToAdd = db.Memories?.Find(memoryId);
-
 
     if (memoryToAdd == null)
     {

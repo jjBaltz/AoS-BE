@@ -5,7 +5,7 @@ using System.Security.Cryptography.Xml;
 
 public class AoSDbContext : DbContext
 {
-    public DbSet<Activity> Activites { get; set; }
+    public DbSet<Activity> Activities { get; set; }
     public DbSet<Memory> Memories { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<User> Users { get; set; }
