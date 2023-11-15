@@ -109,6 +109,41 @@ app.MapGet("/memories/{id}", (AoSDbContext db, int id) =>
     return db.Memories.Single(memory => memory.MemoryId == id);
 });
 
+app.MapPost("/memories", (AoSDbContext db, Memory memory) =>
+{
+    try
+    {
+        db.Memories.Add(memory);
+        db.SaveChanges();
+        return Results.Created($"/memories/{memory.MemoryId}", memory);
+    }
+    catch (DbUpdateException)
+    {
+        return Results.NotFound();
+    }
+});
+
+app.MapPost("/activities/{activityId}/memories/{memoryId}", (AoSDbContext db, int activityId, int memoryId) =>
+{
+    var activity = db.Activities.Include(a => a.Memories)
+                         .FirstOrDefault(a => a.Id == activityId);
+    if (activity == null)
+    {
+        return Results.NotFound("Activity Not Found");
+    }
+
+    var memoryToAdd = db.Memories?.Find(memoryId);
+
+
+    if (memoryToAdd == null)
+    {
+        return Results.NotFound("Memory not found");
+    }
+
+    activity?.Memories?.Add(memoryToAdd);
+    db.SaveChanges();
+    return Results.Ok(activity);
+});
 
 app.UseHttpsRedirection();
 
