@@ -7,6 +7,7 @@
         public string Description { get; set; }
         public bool IsUsed { get; set; }
         public List<Tag> Tags { get; set; }
+        public List<Memory> Memories { get; set; }
     }
 }
 
