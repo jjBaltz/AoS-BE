@@ -226,9 +226,9 @@ app.MapDelete("/activity/{activityId}/tags/{tagId}", (AoSDbContext db, int activ
     return Results.Ok(activity);
 });
 
-app.MapGet("/activities/open", (AoSDbContext db, bool isUsed) =>
+app.MapGet("/activities/open", (AoSDbContext db) =>
 {
-    return db.Activities.Where(activity => activity.IsUsed == false).ToList();
+    return db.Activities.Where(activity => activity.IsUsed.Equals(false)).ToList();
 });
 
 app.UseHttpsRedirection();
