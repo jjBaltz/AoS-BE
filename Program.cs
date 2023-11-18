@@ -231,6 +231,17 @@ app.MapGet("/activities/open", (AoSDbContext db) =>
     return db.Activities.Where(activity => activity.IsUsed.Equals(false)).ToList();
 });
 
+//TAG API CALLS
+app.MapGet("/tags", (AoSDbContext db) =>
+{
+    return db.Tags.ToList();
+});
+
+app.MapGet("/tags/{id}", (AoSDbContext db, int id) =>
+{
+    return db.Tags.SingleOrDefault(tag => tag.TagId == id);
+});
+
 app.UseHttpsRedirection();
 
 app.Run();
