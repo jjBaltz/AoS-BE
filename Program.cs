@@ -183,6 +183,54 @@ app.MapPost("/activities/{activityId}/memories/{memoryId}", (AoSDbContext db, in
     return Results.Ok(activity);
 });
 
+app.MapPost("/activities/{activityId}/tags/{tagId}", (AoSDbContext db, int activityId, int tagId) =>
+{
+    var activity = db.Activities.Include(a => a.Tags)
+                                .FirstOrDefault(t => t.ActivityId == activityId);
+    if (activity == null)
+    {
+        return Results.NotFound("Activity Not Found");
+    }
+
+    var tagToAdd = db.Tags?.Find(tagId);
+
+    if (tagToAdd == null)
+    {
+        return Results.NotFound("Tag not found");
+    }
+
+    activity?.Tags?.Add(tagToAdd);
+    db.SaveChanges();
+    return Results.Ok(activity);
+});
+
+app.MapDelete("/activity/{activityId}/tags/{tagId}", (AoSDbContext db, int activityId, int tagId) =>
+{
+    var activity = db.Activities.Include(m => m.Tags)
+                                .FirstOrDefault(t => t.ActivityId == activityId);
+    if (activity == null)
+    {
+        return Results.NotFound("Activity not found");
+    }
+
+    var tagToDelete = db.Tags?.Find(tagId);
+
+
+    if (tagToDelete == null)
+    {
+        return Results.NotFound("Tag not found");
+    }
+
+    activity?.Tags?.Remove(tagToDelete);
+    db.SaveChanges();
+    return Results.Ok(activity);
+});
+
+app.MapGet("/activities/open", (AoSDbContext db, bool isUsed) =>
+{
+    return db.Activities.Where(activity => activity.IsUsed == false).ToList();
+});
+
 app.UseHttpsRedirection();
 
 app.Run();
