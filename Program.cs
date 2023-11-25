@@ -1,4 +1,5 @@
 using AoS.Models;
+using AoS.DTOs;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Json;
@@ -55,6 +56,11 @@ app.MapGet("/users", (AoSDbContext db) =>
 app.MapGet("/users/{id}", (AoSDbContext db, int id) =>
 {
     return db.Users.Single(user => user.UserId == id);
+});
+
+app.MapGet("/users/uid/{id}", (AoSDbContext db, string id) =>
+{
+    return db.Users.Single(user => user.UID == id);
 });
 
 app.MapPost("/users", (AoSDbContext db, User user) =>
@@ -134,17 +140,56 @@ app.MapGet("/activities/{id}", (AoSDbContext db, int id) =>
     return db.Activities.Single(activity => activity.ActivityId == id);
 });
 
-app.MapPost("/activities", (AoSDbContext db, Activity activity) =>
+app.MapPost("/activities", (AoSDbContext db, CreateActivityDTO activity) =>
 {
+    User user = db.Users.Single(u => u.UID == activity.UID);
+    Activity newActivity = new Activity
+    {
+        Description = activity.Description,
+        IsUsed = false,
+        UserId = user.UserId,
+    };
+
     try
     {
-        db.Activities.Add(activity);
+        db.Activities.Add(newActivity);
         db.SaveChanges();
-        return Results.Created($"/activities/{activity.ActivityId}", activity);
+        return Results.Created($"/activities/{newActivity.ActivityId}", newActivity);
     }
     catch (DbUpdateException)
     {
         return Results.NotFound();
+    }
+});
+
+app.MapPost("/activities/five", (AoSDbContext db, SubmitActivitiesDTO activities) =>
+{
+    List<string> descriptions = new List<string>();
+    descriptions.Add(activities.Description1);
+    descriptions.Add(activities.Description2);
+    descriptions.Add(activities.Description3);
+    descriptions.Add(activities.Description4);
+    descriptions.Add(activities.Description5);
+    User user = db.Users.Single(u => u.UID == activities.UID);
+
+    try
+    {
+        foreach (string description in descriptions)
+        {
+            Activity newActivity = new Activity
+            {
+                Description = description,
+                IsUsed = false,
+                UserId = user.UserId,
+            };
+            db.Activities.Add(newActivity);
+        }
+        db.SaveChanges();
+        return Results.Ok("created");
+    }
+    catch (DbUpdateException)
+    {
+        return Results.NoContent();
     }
 });
 

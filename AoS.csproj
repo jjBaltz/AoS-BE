@@ -21,8 +21,10 @@
 
   <ItemGroup>
     <None Remove="Models\" />
+    <None Remove="DTOs\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
+    <Folder Include="DTOs\" />
   </ItemGroup>
 </Project>
