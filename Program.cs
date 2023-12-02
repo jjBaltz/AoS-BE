@@ -110,13 +110,34 @@ app.MapGet("/memories", (AoSDbContext db) =>
     return db.Memories.ToList();
 });
 
+app.MapGet("/memories/user/{userId}", (AoSDbContext db, int UserId) =>
+{
+    var user = db.Users.FirstOrDefault(u => u.UserId == UserId);
+
+    if (user == null)
+    {
+        return Results.NotFound("User not found");
+    }
+
+    var memoriesByUser = db.Memories
+        .Where(a => a.UserId == UserId)
+        .ToList();
+
+    return Results.Ok(memoriesByUser);
+});
+
 app.MapGet("/memories/{id}", (AoSDbContext db, int id) =>
 {
     return db.Memories.Single(memory => memory.MemoryId == id);
 });
 
-app.MapPost("/memories", (AoSDbContext db, Memory memory) =>
+app.MapPost("/memories/{activityId}", (AoSDbContext db, Memory memory, int activityId) =>
 {
+    Activity activity = db.Activities.Single(a => a.ActivityId == activityId);
+    activity.IsUsed = true;
+    db.Activities.Update(activity);
+    memory.ActivityId = activityId;
+
     try
     {
         db.Memories.Add(memory);
@@ -133,6 +154,22 @@ app.MapPost("/memories", (AoSDbContext db, Memory memory) =>
 app.MapGet("/activities", (AoSDbContext db) =>
 {
     return db.Activities.ToList();
+});
+
+app.MapGet("/activities/users/{userId}", (AoSDbContext db, int UserId) =>
+{
+    var user = db.Users.FirstOrDefault(u => u.UserId == UserId);
+
+    if (user == null)
+    {
+        return Results.NotFound("User not found");
+    }
+
+    var activitiesByUser = db.Activities
+        .Where(a => a.UserId == UserId)
+        .ToList();
+
+    return Results.Ok(activitiesByUser);
 });
 
 app.MapGet("/activities/{id}", (AoSDbContext db, int id) =>
@@ -224,6 +261,8 @@ app.MapPost("/activities/{activityId}/memories/{memoryId}", (AoSDbContext db, in
     }
 
     activity?.Memories?.Add(memoryToAdd);
+    activity.IsUsed = true;
+    db.Activities.Update(activity);
     db.SaveChanges();
     return Results.Ok(activity);
 });
@@ -286,6 +325,24 @@ app.MapGet("/tags/{id}", (AoSDbContext db, int id) =>
 {
     return db.Tags.SingleOrDefault(tag => tag.TagId == id);
 });
+
+//app.MapPost("/tags/{activityId}", (AoSDbContext db, Tag tag, int activityId) =>
+//{
+//    Activity activity = db.Activities.Single(a => a.ActivityId == activityId);
+//    db.Activities.Update(activity);
+//    tag.ActivityId = activityId;
+
+//    try
+//    {
+//        db.Memories.Add(tag);
+//        db.SaveChanges();
+//        return Results.Created($"/tags/{tag.TagId}", tag);
+//    }
+//    catch (DbUpdateException)
+//    {
+//        return Results.NotFound();
+//    }
+//});
 
 app.UseHttpsRedirection();
 
