@@ -185,10 +185,16 @@ app.MapPost("/activities", (AoSDbContext db, CreateActivityDTO activity) =>
         Description = activity.Description,
         IsUsed = false,
         UserId = user.UserId,
+        Tags = new(),
     };
 
     try
     {
+        foreach(var Id in activity.TagIds)
+        {
+            var tag = db.Tags.Find(Id);
+            newActivity.Tags.Add(tag);
+        }
         db.Activities.Add(newActivity);
         db.SaveChanges();
         return Results.Created($"/activities/{newActivity.ActivityId}", newActivity);
